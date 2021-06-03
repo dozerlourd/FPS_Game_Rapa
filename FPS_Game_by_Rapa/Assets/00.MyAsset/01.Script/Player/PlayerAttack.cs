@@ -7,14 +7,15 @@ public class PlayerAttack : MonoBehaviour
     [SerializeField] Transform firePos;
     [SerializeField] GameObject bullet;
     [SerializeField] GameObject bulletEffect;
-    
+    [SerializeField] float attackPower;
+
     void Update()
     {
         if(Input.GetMouseButtonDown(1))
         {
             Fire(bullet);
         }
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0))
         {
             RayFire();
         }
@@ -24,8 +25,8 @@ public class PlayerAttack : MonoBehaviour
     {
         GameObject bulletClone = Instantiate(_bullet);
         bulletClone.transform.position = firePos.position;
-        //bulletClone.transform.forward = transform.forward;
-        bulletClone.transform.rotation = transform.rotation;
+        bulletClone.transform.forward = firePos.forward;
+        //bulletClone.transform.rotation = transform.rotation;
     }
 
     void RayFire()
@@ -36,12 +37,15 @@ public class PlayerAttack : MonoBehaviour
 
         if(Physics.Raycast(ray, out rayHit))
         {
-            Debug.Log(rayHit.normal);
+            //Debug.Log(rayHit.normal);
 
             GameObject SFX_Clone = Instantiate(bulletEffect, rayHit.point, Quaternion.LookRotation(-rayHit.normal));
             Debug.DrawRay(rayHit.point, rayHit.normal * 100, Color.red);
 
-
+            if (rayHit.collider.tag == "Enemy")
+            {
+                rayHit.collider.GetComponent<EnemyFSM>().Damaged(attackPower);
+            }
 
 
             #region 입사각과 반사각 구하는 공식

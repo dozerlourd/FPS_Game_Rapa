@@ -7,6 +7,18 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] float moveSpeed = 1f, jumpPower = 5f;
     [SerializeField] float gravity = -9.81f;
     [SerializeField] bool isGround = false;
+    [SerializeField] float maxHP, currHP;
+
+    bool d;
+
+    public float CurrHP
+    {
+        get => currHP;
+        set
+        {
+            currHP = value;
+        }
+    }
 
     float yVelocity = 0;
 
@@ -15,6 +27,7 @@ public class PlayerMove : MonoBehaviour
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
+        CurrHP = maxHP;
     }
 
     void Update()
@@ -47,4 +60,17 @@ public class PlayerMove : MonoBehaviour
     }
 
     void GroundCheck() => isGround = characterController.collisionFlags == CollisionFlags.Below ? true : false;
+
+    bool Toggle(bool value) => value = !value;
+
+    void Toggle()
+    {
+        d = !d; 
+    }
+
+    public void OnClick()
+    {
+        d = Toggle(d);
+        Debug.Log(d);
+    }
 }
