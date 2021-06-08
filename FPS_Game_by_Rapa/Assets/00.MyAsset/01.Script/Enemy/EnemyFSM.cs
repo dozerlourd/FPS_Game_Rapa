@@ -151,10 +151,6 @@ public class EnemyFSM : MonoBehaviour
             }
         }
     }
-    private void Die()
-    {
-
-    }
 
     IEnumerator AttackToTrace(float delay)
     {
@@ -174,10 +170,21 @@ public class EnemyFSM : MonoBehaviour
     public void Damaged(float value)
     {
         currHP = Mathf.Max(currHP - value, 0);
-        anim.SetTrigger("Damaged");
-        if (EState == State.Damaged) return;
-        isDamaged = true;
-        SetState(State.Damaged);
+        if (EState == State.Die) return;
+
+        if (currHP <= 0)
+        {
+            SetState(State.Die);
+            anim.SetTrigger("Die");
+            characterController.enabled = false;
+        }
+        else
+        {
+            anim.SetTrigger("Damaged");
+            if (EState == State.Damaged) return;
+            isDamaged = true;
+            SetState(State.Damaged);
+        }
     }
 
     IEnumerator Damaged()
@@ -200,5 +207,24 @@ public class EnemyFSM : MonoBehaviour
         yield return new WaitForSeconds(time/2);
         SetState(State.Idle);
         anim.ResetTrigger("IdleToMove");
+    }
+
+    void Die()
+    {
+        AnimatorStateInfo dieInfo = anim.GetCurrentAnimatorStateInfo(0);
+
+        if(dieInfo.IsName("Zombie_Die") && dieInfo.normalizedTime >= 0.99f)
+        {
+            StartCoroutine(Co_Die());
+        }
+    }
+
+    IEnumerator Co_Die()
+    {
+        float rate = 0;
+        while(rate < 1)
+        {
+            
+        }
     }
 }
