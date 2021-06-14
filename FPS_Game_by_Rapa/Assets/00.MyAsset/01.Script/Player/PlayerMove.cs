@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
-    [SerializeField] float moveSpeed = 1f, jumpPower = 5f;
+    Animator anim;
+
+    [SerializeField] float runSpeed = 2f, jumpPower = 5f, walkSpeedRate;
     [SerializeField] float gravity = -9.81f;
     [SerializeField] bool isGround = false;
     [SerializeField] float maxHP, currHP;
 
-    bool d;
+    float moveSpeed = 0, moveSpeed_H = 0f, moveSpeed_V = 0f, walkSpeed = 0f, yVelocity = 0;
 
     public float CurrHP
     {
@@ -20,14 +22,14 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    float yVelocity = 0;
-
     CharacterController characterController;
 
     private void Start()
     {
         characterController = GetComponent<CharacterController>();
+        anim = transform.GetChild(0).GetComponent<Animator>();
         CurrHP = maxHP;
+        walkSpeed = runSpeed * 0.35f;
     }
 
     void Update()
@@ -43,6 +45,8 @@ public class PlayerMove : MonoBehaviour
         Vector3 dir = new Vector3(h, 0, v);
         dir.Normalize();
 
+        moveSpeed = (Input.GetKey(KeyCode.LeftShift) == true && h != 0) ? dir.magnitude * runSpeed : dir.magnitude * walkSpeed;
+
         dir = Camera.main.transform.TransformDirection(dir);
 
         GroundCheck();
@@ -56,21 +60,15 @@ public class PlayerMove : MonoBehaviour
         yVelocity += gravity * Time.deltaTime;
         dir.y = yVelocity;
 
-        characterController.Move(dir * moveSpeed * Time.deltaTime);
+        characterController.Move(new Vector3(dir.x * moveSpeed, dir.y, dir.z * moveSpeed) * Time.deltaTime);
+
+        // 1D방식 moveSpeed 값 적용시켜주는 코드 필요
+        //characterController.Move(new Vector3(dir.x * moveSpeed, dir.y, dir.z * moveSpeed) * Time.deltaTime);
+        //anim.SetFloat("MoveSpeed_H", moveSpeed / runSpeed);
+
+        anim.SetFloat("MoveSpeed_H", h);
+        anim.SetFloat("MoveSpeed_V", v);
     }
 
     void GroundCheck() => isGround = characterController.collisionFlags == CollisionFlags.Below ? true : false;
-
-    bool Toggle(bool value) => value = !value;
-
-    void Toggle()
-    {
-        d = !d; 
-    }
-
-    public void OnClick()
-    {
-        d = Toggle(d);
-        Debug.Log(d);
-    }
 }

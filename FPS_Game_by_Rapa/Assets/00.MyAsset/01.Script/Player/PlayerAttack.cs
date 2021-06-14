@@ -8,16 +8,24 @@ public class PlayerAttack : MonoBehaviour
     [SerializeField] GameObject bullet;
     [SerializeField] GameObject bulletEffect;
     [SerializeField] float attackPower;
+    Animator anim;
+
+    private void Start()
+    {
+        anim = transform.GetChild(0).GetComponent<Animator>();
+    }
 
     void Update()
     {
         if(Input.GetMouseButtonDown(1))
         {
             Fire(bullet);
+            anim.SetTrigger("Fire");
         }
         if (Input.GetMouseButtonDown(0))
         {
             RayFire();
+            anim.SetTrigger("Fire");
         }
     }
 

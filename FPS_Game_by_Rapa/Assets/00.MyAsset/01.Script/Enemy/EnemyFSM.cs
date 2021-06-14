@@ -8,8 +8,10 @@ public class EnemyFSM : MonoBehaviour
     CharacterController characterController;
     Animator anim;
 
+    //데미지 상태에서 마지막 호출된 코루틴
     Coroutine c_damage;
 
+    //상태 Enum문
     enum State
     {
         Idle = 0,
@@ -39,48 +41,51 @@ public class EnemyFSM : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         
         anim = GetComponentInChildren<Animator>();
-        currHP = maxHP;
+        currHP = maxHP; // HP 초기화
     }
 
     void Update()
     {
+        //Enum문으로 구성된 상태패턴 약식
         switch(EState)
         {
             case State.Idle:
                 {
-                    Idle();
+                    State_Idle();
                     break;
                 }
             case State.Trace:
                 {
-                    Trace();
+                    State_Trace();
                     break;
                 }
             case State.Attack:
                 {
-                    Attack();
+                    State_Attack();
                     break;
                 }
             case State.Damaged:
                 {
                     if (isDamaged)
                     {
+                        // c_damage가 null이 아니라면 기존의 c_damage를 멈추고 재호출한다.
                         if(c_damage != null) StopCoroutine(c_damage);
-                        c_damage = StartCoroutine(Damaged());
+                        c_damage = StartCoroutine(Co_State_Damaged());
                     }
                     break;
                 }
             case State.Die:
                 {
-                    Die();
+                    State_Die();
                     break;
                 }
         }
     }
 
     float idleTimer = 0;
-    private void Idle()
+    private void State_Idle()
     {
+        //플레이어와 자신 사이의 거리
         float dist = (playerTr.position - transform.position).magnitude;
 
         if(dist <= traceRange && idleTimer >= 0.5f)
@@ -96,7 +101,7 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
-    private void Trace()
+    private void State_Trace()
     {
         Vector3 dir = playerTr.position - transform.position;
         float dist = dir.magnitude;
@@ -127,7 +132,7 @@ public class EnemyFSM : MonoBehaviour
     }
 
     bool isBooked = false;
-    private void Attack()
+    private void State_Attack()
     {
         attackRangeCheck = Vector3.Distance(transform.position, playerTr.position);
 
@@ -175,7 +180,7 @@ public class EnemyFSM : MonoBehaviour
         if (currHP <= 0)
         {
             SetState(State.Die);
-            anim.SetTrigger("Die");
+            anim.SetBool("IsDie", true);
             characterController.enabled = false;
         }
         else
@@ -187,7 +192,7 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
-    IEnumerator Damaged()
+    IEnumerator Co_State_Damaged()
     {
         float time;
         // 피격 애니메이션의 총 길이를 구한다.
@@ -197,7 +202,7 @@ public class EnemyFSM : MonoBehaviour
             if (damagedInfo.IsName("Zombie_Idle"))
             {
                 time = damagedInfo.length;
-                Debug.Log(time.ToString());
+                //Debug.Log(time.ToString());
                 break;
             }
             yield return new WaitForEndOfFrame();
@@ -209,13 +214,16 @@ public class EnemyFSM : MonoBehaviour
         anim.ResetTrigger("IdleToMove");
     }
 
-    void Die()
+    void State_Die()
     {
         AnimatorStateInfo dieInfo = anim.GetCurrentAnimatorStateInfo(0);
 
-        if(dieInfo.IsName("Zombie_Die") && dieInfo.normalizedTime >= 0.99f)
+        if(dieInfo.IsName("Zombie_Die"))
         {
-            StartCoroutine(Co_Die());
+            anim.SetBool("IsDie", false);
+
+            if (dieInfo.normalizedTime >= 1f)
+                StartCoroutine(Co_Die());
         }
     }
 
@@ -224,7 +232,8 @@ public class EnemyFSM : MonoBehaviour
         float rate = 0;
         while(rate < 1)
         {
-            
+
+            yield return new WaitForEndOfFrame();
         }
     }
 }
