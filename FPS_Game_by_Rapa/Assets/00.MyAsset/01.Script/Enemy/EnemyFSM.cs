@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class EnemyFSM : MonoBehaviour
 {
+    NavMeshAgent myNav;
     CharacterController characterController;
     Animator anim;
 
@@ -23,10 +25,10 @@ public class EnemyFSM : MonoBehaviour
 
     [SerializeField] State EState;
 
-    [SerializeField] float moveSpeed;
-    [SerializeField] float maxHP;
-    [SerializeField] float traceRange, attackRange;
-    [SerializeField] float attackDelay, attackPower;
+    [SerializeField] float moveSpeed = 0f;
+    [SerializeField] float maxHP = 0f;
+    [SerializeField] float traceRange = 0f, attackRange = 0f;
+    [SerializeField] float attackDelay = 0f, attackPower = 0f;
     
     public float AttackPower => attackPower;
 
@@ -42,6 +44,11 @@ public class EnemyFSM : MonoBehaviour
         
         anim = GetComponentInChildren<Animator>();
         currHP = maxHP; // HP 초기화
+
+        myNav = GetComponent<NavMeshAgent>();
+        myNav.speed = moveSpeed;
+        myNav.acceleration = 3f;
+        myNav.stoppingDistance = attackRange;
     }
 
     void Update()
@@ -56,7 +63,8 @@ public class EnemyFSM : MonoBehaviour
                 }
             case State.Trace:
                 {
-                    State_Trace();
+                    //State_Trace();
+                    State_Trace2();
                     break;
                 }
             case State.Attack:
@@ -104,16 +112,16 @@ public class EnemyFSM : MonoBehaviour
     private void State_Trace()
     {
         Vector3 dir = playerTr.position - transform.position;
-        float dist = dir.magnitude;
+        float dist = dir.sqrMagnitude;
 
-        if (dist <= attackRange)
+        if (dist <= Mathf.Pow(attackRange,2))
         {
             anim.SetTrigger("MoveToAttack");
             SetState(State.Attack);
             attackDelayTime = 0;
         }
         
-        if (dist >= traceRange)
+        if (dist >= Mathf.Pow(traceRange,2))
         {
             anim.SetTrigger("MoveToIdle");
             idleTimer = 0;
@@ -129,6 +137,32 @@ public class EnemyFSM : MonoBehaviour
         //new Vector3(Mathf.Lerp(transform.rotation.x, dir.x, rate), dir.y, dir.z));
         //transform.rotation = lookRotation;
         transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(dir), rate);
+    }
+
+    void State_Trace2()
+    {
+        myNav.enabled = true;
+        //플레이어의 위치를 NavMesh의 목적지로 설정한다.
+        myNav.SetDestination(playerTr.position);
+
+        float dist = (playerTr.position - transform.position).magnitude;
+
+        if (dist <= attackRange)
+        {
+            anim.SetTrigger("MoveToAttack");
+            SetState(State.Attack);
+            attackDelayTime = 0;
+            myNav.enabled = false;
+        }
+
+        if (dist >= traceRange)
+        {
+            anim.SetTrigger("MoveToIdle");
+            idleTimer = 0;
+            //Debug.Log("또넘어가욧");
+            SetState(State.Idle);
+            myNav.enabled = false;
+        }
     }
 
     bool isBooked = false;
@@ -153,6 +187,7 @@ public class EnemyFSM : MonoBehaviour
             if (!isBooked)
             {
                 StartCoroutine(AttackToTrace(1.0f));
+                isBooked = true;
             }
         }
     }
@@ -162,6 +197,7 @@ public class EnemyFSM : MonoBehaviour
         yield return new WaitForSeconds(delay);
         SetState(State.Trace);
         anim.SetTrigger("AttackToMove");
+        isBooked = false;
     }
 
     void SetState(State value)
@@ -174,6 +210,7 @@ public class EnemyFSM : MonoBehaviour
     /// <param name="value"> 대미지 값 </param>
     public void Damaged(float value)
     {
+        myNav.enabled = false;
         currHP = Mathf.Max(currHP - value, 0);
         if (EState == State.Die) return;
 
@@ -216,6 +253,7 @@ public class EnemyFSM : MonoBehaviour
 
     void State_Die()
     {
+        myNav.enabled = false;
         AnimatorStateInfo dieInfo = anim.GetCurrentAnimatorStateInfo(0);
 
         if(dieInfo.IsName("Zombie_Die"))

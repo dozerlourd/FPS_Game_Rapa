@@ -9,9 +9,9 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] float runSpeed = 2f, jumpPower = 5f, walkSpeedRate;
     [SerializeField] float gravity = -9.81f;
     [SerializeField] bool isGround = false;
-    [SerializeField] float maxHP, currHP;
+    [SerializeField] float maxHP = 0f, currHP;
 
-    float moveSpeed = 0, moveSpeed_H = 0f, moveSpeed_V = 0f, walkSpeed = 0f, yVelocity = 0;
+    float moveSpeed = 0, /*moveSpeed_H = 0f, moveSpeed_V = 0f, */ walkSpeed = 0f, yVelocity = 0;
 
     public float CurrHP
     {
@@ -45,8 +45,7 @@ public class PlayerMove : MonoBehaviour
         Vector3 dir = new Vector3(h, 0, v);
         dir.Normalize();
 
-        moveSpeed = (Input.GetKey(KeyCode.LeftShift) == true && h != 0) ? dir.magnitude * runSpeed : dir.magnitude * walkSpeed;
-
+        moveSpeed = (Input.GetKey(KeyCode.LeftShift) == true) ? dir.magnitude * runSpeed : dir.magnitude * walkSpeed;
         dir = Camera.main.transform.TransformDirection(dir);
 
         GroundCheck();

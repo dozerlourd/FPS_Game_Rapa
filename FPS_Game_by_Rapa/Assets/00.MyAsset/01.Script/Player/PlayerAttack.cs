@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class PlayerAttack : MonoBehaviour
 {
-    [SerializeField] Transform firePos;
-    [SerializeField] GameObject bullet;
-    [SerializeField] GameObject bulletEffect;
-    [SerializeField] float attackPower;
+    [SerializeField] Transform firePos = null;
+    [SerializeField] GameObject bullet = null;
+    [SerializeField] GameObject bulletEffect = null;
+    [SerializeField] float attackPower = 0f;
     Animator anim;
 
     private void Start()

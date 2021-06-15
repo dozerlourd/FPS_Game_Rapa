@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraRotate : MonoBehaviour
 {
-    [SerializeField] float rotSpeed, rotateLimitX;
+    [SerializeField] float rotSpeed = 0f, rotateLimitX = 0f;
 
     float rotX, rotY;
     // Update is called once per frame
